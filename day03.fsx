@@ -9,20 +9,20 @@ let compileLine (inst:string) =
     inst.Split(',') 
     |> Seq.map (fun s -> 
         match Char.ToUpper s.[0], Int32.Parse(s.[1..]) with
-        | 'R', n  -> Right, n | 'L', n -> Left, n | 'U',n -> Up, n | 'D',n -> Down, n | _ -> Up, 0)
+        | 'R',n -> Right,n | 'L',n -> Left,n | 'U',n -> Up,n | 'D',n -> Down,n | _ -> Up,0)
 
 let compile (lines:string) =
     lines.Split([| "\n"; "\r";  "\n\r";  "\r\n" |], StringSplitOptions.RemoveEmptyEntries)
     |> Seq.map compileLine
 
 let move = function 
-    | Up -> fun (x,y) -> (x,y+1) 
-    | Down -> fun (x,y) -> (x,y-1)
-    | Left -> fun (x,y) -> (x-1,y)
+    | Up    -> fun (x,y) -> (x,y+1) 
+    | Down  -> fun (x,y) -> (x,y-1)
+    | Left  -> fun (x,y) -> (x-1,y)
     | Right -> fun (x,y) -> (x+1,y)
-    | Unk -> id
+    | Unk   -> id
 
-let applyWire wireNum wire (starting:Board) =
+let applyWire wireNum wire starting =
     let applyMove (board, p) (dir, arg) =
         [1..arg] 
         |> Seq.fold (fun (b:Board, pos) _ -> 
@@ -32,11 +32,11 @@ let applyWire wireNum wire (starting:Board) =
     board
 
 let run program =
-    let lines = compile program
+    let wires = compile program
     let (_,board) = 
-        lines 
-        |> Seq.fold (fun (i, board) line -> 
-            i+1, (applyWire i line board)) (0,Map.empty)
+        wires 
+        |> Seq.fold (fun (wireNum, board) wire -> 
+            wireNum+1, (applyWire wireNum wire board)) (0,Map.empty)
     board
     |> Map.toSeq
     |> Seq.filter (fun (_, v) -> Set.count v > 1)
